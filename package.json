@@ -10,6 +10,7 @@
     "format-check": "prettier --check **/*.ts",
     "lint": "eslint src/**/*.ts",
     "package": "ncc build --source-map --license licenses.txt",
+    "prepare": "npm run build && npm run package",
     "test": "jest",
     "all": "npm run build && npm run format && npm run lint && npm run package && npm test"
   },
@@ -25,7 +26,11 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "@actions/core": "^1.2.6"
+    "@actions/core": "^1.2.6",
+    "@actions/github": "^4.0.0",
+    "@actions/http-client": "^1.0.9",
+    "fast-xml-parser": "^3.17.5",
+    "xml-js": "^1.6.11"
   },
   "devDependencies": {
     "@types/jest": "^26.0.15",

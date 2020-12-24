@@ -1,11 +1,10 @@
-name: 'Your name here'
-description: 'Provide a description here'
-author: 'Your name or organization here'
+name: 'Jacoco coverage report'
+description: 'Comments on the PR for the jacoco coverage report'
 inputs:
-  milliseconds: # change this
+  github_token:
     required: true
-    description: 'input description here'
-    default: 'default value if applicable'
+  path:
+    required: true
 runs:
   using: 'node12'
   main: 'dist/index.js'
