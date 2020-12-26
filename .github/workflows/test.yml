@@ -19,6 +19,78 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - uses: ./
+      - name: Create Jacoco coverage check
+        id: jacoco-coverage-report
+        uses: ./
         with:
-          milliseconds: 1000
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          path: ./fixtures/jacocoTestReport.xml
+          coverage_path: ./fixtures/coverage-report-positive.cov
+          decrease_threshold: 0.075
+      - name: Check Jacoco coverage outputs
+        env:
+          REPORT_COVERAGE_STATUS: ${{ steps.jacoco-coverage-report.outputs.report-coverage-status }}
+          REPORT_COVERAGE_SUMMARY: ${{ steps.jacoco-coverage-report.outputs.report-coverage-summary }}
+        run: |
+          if [[ ! REPORT_COVERAGE_STATUS ]]; then
+            exit 1
+          fi
+          if [[ ! REPORT_COVERAGE_STATUS != "success" ]]; then
+            exit 1
+          fi
+          if [[ ! REPORT_COVERAGE_SUMMARY ]]; then
+            exit 1
+          fi
+          echo $REPORT_COVERAGE_STATUS
+          echo $REPORT_COVERAGE_SUMMARY
+          cat ./fixtures/coverage-report-positive.cov
+      - name: Create Jacoco coverage missing target coverage check
+        id: jacoco-coverage-report-missing
+        uses: ./
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          path: ./fixtures/jacocoTestReport.xml
+          coverage_path: ./fixtures/coverage-report-missing.cov
+          decrease_threshold: 0.075
+      - name: Check Jacoco coverage outputs
+        env:
+          REPORT_COVERAGE_STATUS: ${{ steps.jacoco-coverage-report-missing.outputs.report-coverage-status }}
+          REPORT_COVERAGE_SUMMARY: ${{ steps.jacoco-coverage-report-missing.outputs.report-coverage-summary }}
+        run: |
+          if [[ ! REPORT_COVERAGE_STATUS ]]; then
+            exit 1
+          fi
+          if [[ ! REPORT_COVERAGE_STATUS != "success" ]]; then
+            exit 1
+          fi
+          if [[ ! REPORT_COVERAGE_SUMMARY ]]; then
+            exit 1
+          fi
+          echo $REPORT_COVERAGE_STATUS
+          echo $REPORT_COVERAGE_SUMMARY
+          cat ./fixtures/coverage-report-missing.cov
+      - name: Create Jacoco coverage failure check
+        id: jacoco-coverage-report-failure
+        uses: ./
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          path: ./fixtures/jacocoTestReport.xml
+          coverage_path: ./fixtures/coverage-report-negative.cov
+          decrease_threshold: 0.004
+      - name: Check Jacoco coverage outputs
+        env:
+          REPORT_COVERAGE_STATUS: ${{ steps.jacoco-coverage-report-failure.outputs.report-coverage-status }}
+          REPORT_COVERAGE_SUMMARY: ${{ steps.jacoco-coverage-report-failure.outputs.report-coverage-summary }}
+        run: |
+          if [[ ! REPORT_COVERAGE_STATUS ]]; then
+            exit 1
+          fi
+          if [[ ! REPORT_COVERAGE_STATUS != "failure" ]]; then
+            exit 1
+          fi
+          if [[ ! REPORT_COVERAGE_SUMMARY ]]; then
+            exit 1
+          fi
+          echo $REPORT_COVERAGE_STATUS
+          echo $REPORT_COVERAGE_SUMMARY
+          cat ./fixtures/coverage-report-negative.cov

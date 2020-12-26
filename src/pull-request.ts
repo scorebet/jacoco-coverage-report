@@ -2,18 +2,20 @@ import * as core from '@actions/core'
 import * as github from '@actions/github'
 import {IDENTIFIER} from './comment'
 
-const {
-  sha: commitSha,
-  repo: {repo: repoName, owner: repoOwner}
-} = github.context
-
-let defaultParameter = {
-  repo: repoName,
-  owner: repoOwner
-}
-
-export async function findPullRequest(githubToken: string) {
+/* eslint-disable @typescript-eslint/no-explicit-any*/
+export async function findPullRequest(githubToken: string): Promise<any> {
+  /* eslint-enable */
   const octokit = github.getOctokit(githubToken)
+
+  const {
+    sha: commitSha,
+    repo: {repo: repoName, owner: repoOwner}
+  } = github.context
+
+  const defaultParameter = {
+    repo: repoName,
+    owner: repoOwner
+  }
 
   const {
     data: pullRequests
@@ -21,7 +23,7 @@ export async function findPullRequest(githubToken: string) {
     ...defaultParameter,
     commit_sha: commitSha
   })
-  if (pullRequests.length == 0) {
+  if (pullRequests.length === 0) {
     core.info(
       `WARNING: Unable to find pull request for commit sha: ${commitSha}`
     )
@@ -34,15 +36,24 @@ export async function pushCommentOnPullRequest(
   pullRequestNumber: number,
   githubToken: string,
   comment: string
-) {
+): Promise<void> {
   const octokit = github.getOctokit(githubToken)
 
-  let {data: comments} = await octokit.issues.listComments({
+  const {
+    repo: {repo: repoName, owner: repoOwner}
+  } = github.context
+
+  const defaultParameter = {
+    repo: repoName,
+    owner: repoOwner
+  }
+
+  const {data: comments} = await octokit.issues.listComments({
     ...defaultParameter,
     issue_number: pullRequestNumber
   })
-  let targetComment = comments.find(comment => {
-    return comment.body?.includes(IDENTIFIER)
+  const targetComment = comments.find(c => {
+    return c.body?.includes(IDENTIFIER)
   })
   if (targetComment) {
     if (targetComment.body === comment) {

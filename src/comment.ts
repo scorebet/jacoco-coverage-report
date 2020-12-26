@@ -1,5 +1,3 @@
-import * as core from '@actions/core'
-import * as github from '@actions/github'
 import parser from 'fast-xml-parser'
 import fs, {promises as fsPromise} from 'fs'
 
@@ -26,24 +24,26 @@ export async function createCommentOnPullRequest(
   targetCoverages: Coverage[]
 }> {
   const jacocoXmlResult = await fsPromise.readFile(path, 'utf8')
-  let xml = parser.parse(jacocoXmlResult, {
+  const xml = parser.parse(jacocoXmlResult, {
     ignoreAttributes: false
   })
-  let sourceCoverages: Coverage[] = xml.report.counter
+  const sourceCoverages: Coverage[] = xml.report.counter
+    /* eslint-disable @typescript-eslint/no-explicit-any*/
     .map((node: any) => {
-      let missed = parseInt(node['@_missed'])
-      let covered = parseInt(node['@_covered'])
+      /* eslint-enable */
+      const missed = parseInt(node['@_missed'])
+      const covered = parseInt(node['@_covered'])
       return {
         type: node['@_type'],
-        missed: missed,
-        covered: covered,
+        missed,
+        covered,
         coverage: Math.round((covered / (covered + missed)) * 1000000) / 10000
       }
     })
     .sort(function (a: Coverage, b: Coverage) {
       return a.type.localeCompare(b.type)
     })
-  var targetCoverages: Coverage[] = []
+  let targetCoverages: Coverage[] = []
   if (fs.existsSync(coveragePath)) {
     const coverageReportResult = await fsPromise.readFile(coveragePath, 'utf8')
     targetCoverages = JSON.parse(coverageReportResult).sort(function (
@@ -54,7 +54,7 @@ export async function createCommentOnPullRequest(
     })
   }
 
-  let comment = []
+  const comment = []
   const headerPullRequestNumber = (pullRequestNumber ?? ' --')
     .toString()
     .padEnd(4, ' ')
@@ -72,12 +72,12 @@ export async function createCommentOnPullRequest(
     .padEnd(columnWidth, ' ')}${'+/-'.padEnd(columnWidth - 3, ' ')}##
 ===================================================
 `
-  var body1 = createCommentCoverageLine(
+  const body1 = createCommentCoverageLine(
     sourceCoverages.find((coverage: Coverage) => {
-      return coverage.type.toUpperCase() == 'LINE'
+      return coverage.type.toUpperCase() === 'LINE'
     }),
     targetCoverages.find((coverage: Coverage) => {
-      return coverage.type.toUpperCase() == 'LINE'
+      return coverage.type.toUpperCase() === 'LINE'
     })
   )
 
@@ -97,7 +97,7 @@ export async function createCommentOnPullRequest(
       return createCommentCoverageLine(
         sourceCoverage,
         targetCoverages.find((coverage: Coverage) => {
-          return coverage.type.toUpperCase() == sourceCoverage.type
+          return coverage.type.toUpperCase() === sourceCoverage.type
         })
       )
     })
@@ -113,8 +113,8 @@ export async function createCommentOnPullRequest(
   comment.push(body2)
   return {
     comment: comment.join(''),
-    targetCoverages: targetCoverages,
-    sourceCoverages: sourceCoverages
+    targetCoverages,
+    sourceCoverages
   }
 }
 
@@ -123,7 +123,9 @@ function createCommentCoverageLine(
   target?: Coverage
 ): string {
   if (!source) {
-    throw 'Source coverage is undefine, did jacoco coverage finished successsfully?'
+    throw new Error(
+      'Source coverage is undefine, did jacoco coverage finished successsfully?'
+    )
   }
   const type = source.type.toUpperCase().padEnd(14, ' ')
   const targetCoverage = (target?.coverage?.toFixed(4) ?? '')

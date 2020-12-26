@@ -2,7 +2,7 @@ require('./sourcemap-register.js');module.exports =
 /******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
-/***/ 6476:
+/***/ 1667:
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -39,86 +39,129 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-const core = __importStar(__webpack_require__(2186));
-const github = __importStar(__webpack_require__(5438));
+exports.createCommentOnPullRequest = exports.IDENTIFIER = void 0;
 const fast_xml_parser_1 = __importDefault(__webpack_require__(7448));
-var fs = __webpack_require__(5747).promises;
-let header1 = 'Type | Missed | Covered | Total';
-let header2 = '-----|----|-----|------';
-function create(path, githubToken) {
+const fs_1 = __importStar(__webpack_require__(5747));
+// Comment identifier
+exports.IDENTIFIER = 'd3f06eff-da11-4bab-9164-8393ac271c50';
+// Grid spaces
+const columnWidth = 12;
+const columnValueWidth = 6;
+function createCommentOnPullRequest(path, coveragePath, pullRequestNumber) {
     return __awaiter(this, void 0, void 0, function* () {
-        const comment = yield createCommentOnPR(path);
-        yield pushCommentOnPR(githubToken, comment);
-    });
-}
-exports.default = create;
-function createCommentOnPR(path) {
-    return __awaiter(this, void 0, void 0, function* () {
-        const jacocoXmlResult = yield fs.readFile(path, 'utf8');
-        var options = {
+        const jacocoXmlResult = yield fs_1.promises.readFile(path, 'utf8');
+        const xml = fast_xml_parser_1.default.parse(jacocoXmlResult, {
             ignoreAttributes: false
-        };
-        let xml = fast_xml_parser_1.default.parse(jacocoXmlResult, options);
-        //   let xml = JSON.parse(convert.xml2json(jacocoXmlResult))
-        let counters = xml.report.counter.map((counter) => {
-            let missed = parseInt(counter['@_missed']);
-            let covered = parseInt(counter['@_covered']);
+        });
+        const sourceCoverages = xml.report.counter
+            /* eslint-disable @typescript-eslint/no-explicit-any*/
+            .map((node) => {
+            /* eslint-enable */
+            const missed = parseInt(node['@_missed']);
+            const covered = parseInt(node['@_covered']);
             return {
-                type: counter['@_type'],
-                missed: missed,
-                covered: covered,
+                type: node['@_type'],
+                missed,
+                covered,
                 coverage: Math.round((covered / (covered + missed)) * 1000000) / 10000
             };
+        })
+            .sort(function (a, b) {
+            return a.type.localeCompare(b.type);
         });
-        let comment = [];
-        let body = counters
-            .map((counter) => {
-            if (counter.type === 'LINE') {
-                return `**${counter.type}**|**${counter.missed}**|**${counter.covered}**|**${counter.coverage}%**`;
-            }
-            else {
-                return `${counter.type}|${counter.missed}|${counter.covered}|${counter.coverage}%`;
-            }
+        let targetCoverages = [];
+        if (fs_1.default.existsSync(coveragePath)) {
+            const coverageReportResult = yield fs_1.promises.readFile(coveragePath, 'utf8');
+            targetCoverages = JSON.parse(coverageReportResult).sort(function (a, b) {
+                return a.type.localeCompare(b.type);
+            });
+        }
+        const comment = [];
+        const headerPullRequestNumber = (pullRequestNumber !== null && pullRequestNumber !== void 0 ? pullRequestNumber : ' --')
+            .toString()
+            .padEnd(4, ' ');
+        const headerPullRequestTargetBranch = 'dev';
+        const header1 = `
+\`\`\`diff ${exports.IDENTIFIER}
+@@                    Coverage                   @@
+===================================================
+##              ${headerPullRequestTargetBranch.padEnd(columnWidth, ' ')}${'#'
+            .concat(headerPullRequestNumber)
+            .padEnd(columnWidth, ' ')}${'+/-'.padEnd(columnWidth - 3, ' ')}##
+===================================================
+`;
+        const body1 = createCommentCoverageLine(sourceCoverages.find((coverage) => {
+            return coverage.type.toUpperCase() === 'LINE';
+        }), targetCoverages.find((coverage) => {
+            return coverage.type.toUpperCase() === 'LINE';
+        }));
+        const header2 = `
+@@                 Coverage Summary              @@
+===================================================
+##              ${headerPullRequestTargetBranch.padEnd(columnWidth, ' ')}${'#'
+            .concat(headerPullRequestNumber)
+            .padEnd(columnWidth, ' ')}${'+/-'.padEnd(columnWidth - 3, ' ')}##
+===================================================
+`;
+        const body2 = sourceCoverages
+            .map((sourceCoverage) => {
+            return createCommentCoverageLine(sourceCoverage, targetCoverages.find((coverage) => {
+                return coverage.type.toUpperCase() === sourceCoverage.type;
+            }));
         })
             .join('\n');
+        //  Coverage body
         comment.push(header1);
+        comment.push(body1);
+        comment.push('\n');
+        comment.push('\n');
+        // Coverage summary
         comment.push(header2);
-        comment.push(body);
-        return comment.join('\n');
+        comment.push(body2);
+        return {
+            comment: comment.join(''),
+            targetCoverages,
+            sourceCoverages
+        };
     });
 }
-function pushCommentOnPR(githubToken, comment) {
-    return __awaiter(this, void 0, void 0, function* () {
-        const { sha: commitSha, repo: { repo: repoName, owner: repoOwner } } = github.context;
-        let defaultParameter = {
-            repo: repoName,
-            owner: repoOwner
-        };
-        const octokit = github.getOctokit(githubToken);
-        const { data: pullRequests } = yield octokit.repos.listPullRequestsAssociatedWithCommit(Object.assign(Object.assign({}, defaultParameter), { commit_sha: commitSha }));
-        if (pullRequests.length == 0) {
-            core.info(`Unable to find pull request for commit sha: ${commitSha}`);
-            return;
-        }
-        let targetPullRequest = pullRequests[0];
-        let { data: comments } = yield octokit.issues.listComments(Object.assign(Object.assign({}, defaultParameter), { issue_number: targetPullRequest.number }));
-        let targetComment = comments.find(comment => {
-            var _a;
-            return (_a = comment.body) === null || _a === void 0 ? void 0 : _a.startsWith(header1);
-        });
-        if (targetComment) {
-            if (targetComment.body === comment) {
-                core.info('Identical comment already exist, skipping...');
-                return;
-            }
-            else {
-                core.info('Comment already exist, deleting...');
-                yield octokit.issues.deleteComment(Object.assign(Object.assign({}, defaultParameter), { comment_id: targetComment.id }));
-                core.info(`Comment successfully deleted for id: ${targetComment.id}`);
-            }
-        }
-        yield octokit.issues.createComment(Object.assign(Object.assign({}, defaultParameter), { issue_number: targetPullRequest.number, body: comment }));
-    });
+exports.createCommentOnPullRequest = createCommentOnPullRequest;
+function createCommentCoverageLine(source, target) {
+    var _a, _b, _c, _d, _e;
+    if (!source) {
+        throw new Error('Source coverage is undefine, did jacoco coverage finished successsfully?');
+    }
+    const type = source.type.toUpperCase().padEnd(14, ' ');
+    const targetCoverage = ((_b = (_a = target === null || target === void 0 ? void 0 : target.coverage) === null || _a === void 0 ? void 0 : _a.toFixed(4)) !== null && _b !== void 0 ? _b : '')
+        .toString()
+        .substring(0, columnValueWidth)
+        .padEnd(columnValueWidth, '0')
+        .concat('%')
+        .padEnd(columnWidth, ' ');
+    const sourceCoverage = ((_d = (_c = source === null || source === void 0 ? void 0 : source.coverage) === null || _c === void 0 ? void 0 : _c.toFixed(4)) !== null && _d !== void 0 ? _d : '')
+        .toString()
+        .substring(0, columnValueWidth)
+        .padEnd(columnValueWidth, '0')
+        .concat('%')
+        .padEnd(columnWidth, ' ');
+    const diffCoverage = (source.coverage - ((_e = target === null || target === void 0 ? void 0 : target.coverage) !== null && _e !== void 0 ? _e : 0.0))
+        .toFixed(4)
+        .toString()
+        .substring(0, columnValueWidth)
+        .padEnd(6, '0')
+        .concat('%');
+    if (!target) {
+        return `# ${type}${'--'.padEnd(columnWidth, ' ')}${sourceCoverage}--`;
+    }
+    else if (source.coverage === target.coverage) {
+        return `# ${type}${targetCoverage}${sourceCoverage}+0.000%`;
+    }
+    else if (source.coverage > target.coverage) {
+        return `+ ${type}${targetCoverage}${sourceCoverage}+${diffCoverage}`;
+    }
+    else {
+        return `- ${type}${targetCoverage}${sourceCoverage}${diffCoverage}`;
+    }
 }
 
 
@@ -162,13 +205,14 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const core = __importStar(__webpack_require__(2186));
-const generator_1 = __importDefault(__webpack_require__(6476));
+const report_1 = __importDefault(__webpack_require__(8269));
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const token = core.getInput('github_token');
             const path = core.getInput('path');
-            yield generator_1.default(path, token);
+            const coveragePath = core.getInput('coverage_path');
+            yield report_1.default(path, coveragePath, token);
         }
         catch (error) {
             core.setFailed(error.message);
@@ -176,6 +220,208 @@ function run() {
     });
 }
 run();
+
+
+/***/ }),
+
+/***/ 1843:
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.pushCommentOnPullRequest = exports.findPullRequest = void 0;
+const core = __importStar(__webpack_require__(2186));
+const github = __importStar(__webpack_require__(5438));
+const comment_1 = __webpack_require__(1667);
+/* eslint-disable @typescript-eslint/no-explicit-any*/
+function findPullRequest(githubToken) {
+    return __awaiter(this, void 0, void 0, function* () {
+        /* eslint-enable */
+        const octokit = github.getOctokit(githubToken);
+        const { sha: commitSha, repo: { repo: repoName, owner: repoOwner } } = github.context;
+        const defaultParameter = {
+            repo: repoName,
+            owner: repoOwner
+        };
+        const { data: pullRequests } = yield octokit.repos.listPullRequestsAssociatedWithCommit(Object.assign(Object.assign({}, defaultParameter), { commit_sha: commitSha }));
+        if (pullRequests.length === 0) {
+            core.info(`WARNING: Unable to find pull request for commit sha: ${commitSha}`);
+            return null;
+        }
+        return pullRequests[0];
+    });
+}
+exports.findPullRequest = findPullRequest;
+function pushCommentOnPullRequest(pullRequestNumber, githubToken, comment) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const octokit = github.getOctokit(githubToken);
+        const { repo: { repo: repoName, owner: repoOwner } } = github.context;
+        const defaultParameter = {
+            repo: repoName,
+            owner: repoOwner
+        };
+        const { data: comments } = yield octokit.issues.listComments(Object.assign(Object.assign({}, defaultParameter), { issue_number: pullRequestNumber }));
+        const targetComment = comments.find(c => {
+            var _a;
+            return (_a = c.body) === null || _a === void 0 ? void 0 : _a.includes(comment_1.IDENTIFIER);
+        });
+        if (targetComment) {
+            if (targetComment.body === comment) {
+                core.info('Identical comment already exist, skipping...');
+                return;
+            }
+            else {
+                core.info('Comment already exist, deleting...');
+                yield octokit.issues.deleteComment(Object.assign(Object.assign({}, defaultParameter), { comment_id: targetComment.id }));
+                core.info(`Comment successfully deleted for id: ${targetComment.id}`);
+            }
+        }
+        yield octokit.issues.createComment(Object.assign(Object.assign({}, defaultParameter), { issue_number: pullRequestNumber, body: comment }));
+    });
+}
+exports.pushCommentOnPullRequest = pushCommentOnPullRequest;
+
+
+/***/ }),
+
+/***/ 8269:
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.createOutput = void 0;
+const core = __importStar(__webpack_require__(2186));
+const comment_1 = __webpack_require__(1667);
+const pull_request_1 = __webpack_require__(1843);
+const fs_1 = __importDefault(__webpack_require__(5747));
+function create(path, coveragePath, githubToken) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const pullRequest = yield pull_request_1.findPullRequest(githubToken);
+        const result = yield comment_1.createCommentOnPullRequest(path, coveragePath, pullRequest === null || pullRequest === void 0 ? void 0 : pullRequest.number);
+        if (pullRequest) {
+            yield pull_request_1.pushCommentOnPullRequest(pullRequest.number, githubToken, result.comment);
+        }
+        else {
+            core.info(`WARNING: Pull request not found, skipping PR comment....`);
+        }
+        createOutput(result.sourceCoverages, result.targetCoverages);
+        saveOutput(result.sourceCoverages, coveragePath);
+    });
+}
+exports.default = create;
+function createOutput(sourceCoverages, targetCoverage) {
+    core.setOutput('report-coverage-status', 'success');
+    if (targetCoverage.length === 0) {
+        core.info('No previous coverage was found, try running dev workflow again');
+        core.setOutput('report-coverage-summary', 'No previous coverage was found, try running dev workflow again');
+        return true;
+    }
+    const sourceLineCoverage = sourceCoverages.find((coverage) => {
+        return coverage.type.toUpperCase() === 'LINE';
+    });
+    const targetLineCoverage = targetCoverage.find((coverage) => {
+        return coverage.type.toUpperCase() === 'LINE';
+    });
+    if (!sourceLineCoverage) {
+        throw new Error('Source coverage is undefine, did jacoco coverage finished successsfully?');
+    }
+    if (!targetLineCoverage) {
+        throw new Error('Target coverage is undefine, did jacoco coverage finished successsfully?');
+    }
+    let coverageDecreaseThreshold = parseFloat(core.getInput('decrease_threshold'));
+    if (isNaN(coverageDecreaseThreshold)) {
+        coverageDecreaseThreshold = 0.0;
+    }
+    const differenceCoverage = sourceLineCoverage.coverage - targetLineCoverage.coverage;
+    const acceptableCoverage = targetLineCoverage.coverage - coverageDecreaseThreshold;
+    core.info(`Acceptable coverage total: ${acceptableCoverage}`);
+    if (sourceLineCoverage.coverage < acceptableCoverage) {
+        const summary = `Coverage decreased (${differenceCoverage}%) to ${sourceLineCoverage.coverage}%`;
+        core.setOutput('report-coverage-summary', summary);
+        core.setOutput('report-coverage-status', 'failure');
+        core.info(`FAIL: ${summary}`);
+        return false;
+    }
+    else {
+        let summary = '';
+        if (differenceCoverage < 0) {
+            summary = `Coverage decreased (${differenceCoverage}%) to ${sourceLineCoverage.coverage}%`;
+        }
+        else {
+            summary = `Coverage increased (+${differenceCoverage}%) to ${sourceLineCoverage.coverage}%`;
+        }
+        core.setOutput('report-coverage-summary', summary);
+        core.setOutput('report-coverage-status', 'success');
+        core.info(`SUCCESS: ${summary}`);
+        return true;
+    }
+}
+exports.createOutput = createOutput;
+function saveOutput(sourceCoverages, coveragePath) {
+    core.info(`Saving new coverage: ${JSON.stringify(sourceCoverages)}`);
+    fs_1.default.writeFileSync(coveragePath, JSON.stringify(sourceCoverages));
+}
 
 
 /***/ }),
