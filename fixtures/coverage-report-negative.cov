@@ -3,36 +3,36 @@
         "type": "INSTRUCTION",
         "missed": 123,
         "covered": 123123,
-        "coverage": 98.1234
+        "coverage": 99.9234
     },
     {
         "type": "BRANCH",
         "missed": 123,
         "covered": 123123,
-        "coverage": 98.1234
+        "coverage": 99.9234
     },
     {
         "type": "LINE",
         "missed": 123,
         "covered": 123123,
-        "coverage": 98.1234
+        "coverage": 99.9234
     },
     {
         "type": "COMPLEXITY",
         "missed": 123,
         "covered": 123123,
-        "coverage": 98.1234
+        "coverage": 99.9234
     },
     {
         "type": "METHOD",
         "missed": 123,
         "covered": 123123,
-        "coverage": 98.1234
+        "coverage": 99.9234
     },
     {
         "type": "CLASS",
         "missed": 123,
         "covered": 123123,
-        "coverage": 98.1234
+        "coverage": 99.9234
     }
 ]
