@@ -111,6 +111,11 @@ export async function createCommentOnPullRequest(
   // Coverage summary
   comment.push(header2)
   comment.push(body2)
+  // comment.push('\n')
+  // comment.push('```')
+  // comment.push('\n')
+  // comment.push('\n')
+  // comment.push('For coveralls report [click here]()')
   return {
     comment: comment.join(''),
     targetCoverages,
@@ -140,7 +145,7 @@ function createCommentCoverageLine(
     .padEnd(columnValueWidth, '0')
     .concat('%')
     .padEnd(columnWidth, ' ')
-  const diffCoverage = (source.coverage - (target?.coverage ?? 0.0))
+  const diffCoverage = Math.abs(source.coverage - (target?.coverage ?? 0.0))
     .toFixed(4)
     .toString()
     .substring(0, columnValueWidth)
@@ -153,6 +158,6 @@ function createCommentCoverageLine(
   } else if (source.coverage > target.coverage) {
     return `+ ${type}${targetCoverage}${sourceCoverage}+${diffCoverage}`
   } else {
-    return `- ${type}${targetCoverage}${sourceCoverage}${diffCoverage}`
+    return `- ${type}${targetCoverage}${sourceCoverage}-${diffCoverage}`
   }
 }
