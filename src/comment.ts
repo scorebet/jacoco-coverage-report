@@ -3,6 +3,13 @@ import * as github from '@actions/github'
 import parser from 'fast-xml-parser'
 import fs, {promises as fsPromise} from 'fs'
 
+export interface Coverage {
+  type: string
+  missed: number
+  covered: number
+  coverage: number
+}
+
 // Comment identifier
 export const IDENTIFIER = 'd3f06eff-da11-4bab-9164-8393ac271c50'
 // Grid spaces
@@ -13,31 +20,35 @@ export async function createCommentOnPullRequest(
   path: string,
   coveragePath: string,
   pullRequestNumber?: number
-): Promise<string> {
+): Promise<{
+  comment: string
+  sourceCoverages: Coverage[]
+  targetCoverages: Coverage[]
+}> {
   const jacocoXmlResult = await fsPromise.readFile(path, 'utf8')
   let xml = parser.parse(jacocoXmlResult, {
     ignoreAttributes: false
   })
-  let sourceCoverages = xml.report.counter
-    .map((counter: any) => {
-      let missed = parseInt(counter['@_missed'])
-      let covered = parseInt(counter['@_covered'])
+  let sourceCoverages: Coverage[] = xml.report.counter
+    .map((node: any) => {
+      let missed = parseInt(node['@_missed'])
+      let covered = parseInt(node['@_covered'])
       return {
-        type: counter['@_type'],
+        type: node['@_type'],
         missed: missed,
         covered: covered,
         coverage: Math.round((covered / (covered + missed)) * 1000000) / 10000
       }
     })
-    .sort(function (a: any, b: any) {
+    .sort(function (a: Coverage, b: Coverage) {
       return a.type.localeCompare(b.type)
     })
-  var targetCoverages: any[] = []
+  var targetCoverages: Coverage[] = []
   if (fs.existsSync(coveragePath)) {
     const coverageReportResult = await fsPromise.readFile(coveragePath, 'utf8')
     targetCoverages = JSON.parse(coverageReportResult).sort(function (
-      a: any,
-      b: any
+      a: Coverage,
+      b: Coverage
     ) {
       return a.type.localeCompare(b.type)
     })
@@ -62,10 +73,10 @@ export async function createCommentOnPullRequest(
 ===================================================
 `
   var body1 = createCommentCoverageLine(
-    sourceCoverages.find((coverage: any) => {
+    sourceCoverages.find((coverage: Coverage) => {
       return coverage.type.toUpperCase() == 'LINE'
     }),
-    targetCoverages.find((coverage: any) => {
+    targetCoverages.find((coverage: Coverage) => {
       return coverage.type.toUpperCase() == 'LINE'
     })
   )
@@ -82,10 +93,10 @@ export async function createCommentOnPullRequest(
 ===================================================
 `
   const body2 = sourceCoverages
-    .map((sourceCoverage: any) => {
+    .map((sourceCoverage: Coverage) => {
       return createCommentCoverageLine(
         sourceCoverage,
-        targetCoverages.find((coverage: any) => {
+        targetCoverages.find((coverage: Coverage) => {
           return coverage.type.toUpperCase() == sourceCoverage.type
         })
       )
@@ -100,10 +111,20 @@ export async function createCommentOnPullRequest(
   // Coverage summary
   comment.push(header2)
   comment.push(body2)
-  return comment.join('')
+  return {
+    comment: comment.join(''),
+    targetCoverages: targetCoverages,
+    sourceCoverages: sourceCoverages
+  }
 }
 
-function createCommentCoverageLine(source: any, target?: any): string {
+function createCommentCoverageLine(
+  source?: Coverage,
+  target?: Coverage
+): string {
+  if (!source) {
+    throw 'Source coverage is undefine, did jacoco coverage finished successsfully?'
+  }
   const type = source.type.toUpperCase().padEnd(14, ' ')
   const targetCoverage = (target?.coverage?.toFixed(4) ?? '')
     .toString()
@@ -117,7 +138,7 @@ function createCommentCoverageLine(source: any, target?: any): string {
     .padEnd(columnValueWidth, '0')
     .concat('%')
     .padEnd(columnWidth, ' ')
-  const diffCoverage = (source.coverage - target?.coverage)
+  const diffCoverage = (source.coverage - (target?.coverage ?? 0.0))
     .toFixed(4)
     .toString()
     .substring(0, columnValueWidth)

@@ -1,7 +1,7 @@
 import {createCommentOnPullRequest} from '../src/comment'
 
 test('Create comment verification with positive coverage', async () => {
-  let comment = await createCommentOnPullRequest(
+  let result = await createCommentOnPullRequest(
     './fixtures/jacocoTestReport.xml',
     './fixtures/coverage-report-positive.cov',
     2857
@@ -27,11 +27,17 @@ test('Create comment verification with positive coverage', async () => {
 + LINE          95.123%     97.614%     +2.4907%
 + METHOD        35.123%     93.833%     +58.710%`
 
-  expect(comment).toEqual(expectedComment)
+  expect(result.comment).toEqual(expectedComment)
+  expect(result.targetCoverages).toContainEqual({
+    type: 'LINE',
+    missed: 123,
+    covered: 123123,
+    coverage: 95.1234
+  })
 })
 
 test('Create comment verification with negative coverage', async () => {
-  let comment = await createCommentOnPullRequest(
+  let result = await createCommentOnPullRequest(
     './fixtures/jacocoTestReport.xml',
     './fixtures/coverage-report-negative.cov',
     2857
@@ -57,11 +63,17 @@ test('Create comment verification with negative coverage', async () => {
 - LINE          98.123%     97.614%     -0.509%
 - METHOD        98.123%     93.833%     -4.289%`
 
-  expect(comment).toEqual(expectedComment)
+  expect(result.comment).toEqual(expectedComment)
+  expect(result.targetCoverages).toContainEqual({
+    type: 'LINE',
+    missed: 123,
+    covered: 123123,
+    coverage: 98.1234
+  })
 })
 
 test('Create comment verification with equal coverage', async () => {
-  let comment = await createCommentOnPullRequest(
+  let result = await createCommentOnPullRequest(
     './fixtures/jacocoTestReport.xml',
     './fixtures/coverage-report-equal.cov',
     2857
@@ -87,11 +99,17 @@ test('Create comment verification with equal coverage', async () => {
 # LINE          97.614%     97.614%     +0.000%
 # METHOD        93.833%     93.833%     +0.000%`
 
-  expect(comment).toEqual(expectedComment)
+  expect(result.comment).toEqual(expectedComment)
+  expect(result.targetCoverages).toContainEqual({
+    type: 'LINE',
+    missed: 123,
+    covered: 123123,
+    coverage: 97.6141
+  })
 })
 
 test('Create comment verification with missing coverage', async () => {
-  let comment = await createCommentOnPullRequest(
+  let result = await createCommentOnPullRequest(
     './fixtures/jacocoTestReport.xml',
     './fixtures/coverage-report-missing.cov',
     2857
@@ -117,11 +135,12 @@ test('Create comment verification with missing coverage', async () => {
 # LINE          --          97.614%     --
 # METHOD        --          93.833%     --`
 
-  expect(comment).toEqual(expectedComment)
+  expect(result.comment).toEqual(expectedComment)
+  expect(result.targetCoverages.length).toEqual(0)
 })
 
 test('Create comment verification with single-digit coverage', async () => {
-  let comment = await createCommentOnPullRequest(
+  let result = await createCommentOnPullRequest(
     './fixtures/jacocoTestReport.xml',
     './fixtures/coverage-report-single-digit.cov',
     2857
@@ -147,11 +166,11 @@ test('Create comment verification with single-digit coverage', async () => {
 + LINE          9.1234%     97.614%     +88.490%
 + METHOD        5.1234%     93.833%     +88.710%`
 
-  expect(comment).toEqual(expectedComment)
+  expect(result.comment).toEqual(expectedComment)
 })
 
 test('Create comment verification with null pull request', async () => {
-  let comment = await createCommentOnPullRequest(
+  let result = await createCommentOnPullRequest(
     './fixtures/jacocoTestReport.xml',
     './fixtures/coverage-report-single-digit.cov',
     undefined
@@ -177,5 +196,5 @@ test('Create comment verification with null pull request', async () => {
 + LINE          9.1234%     97.614%     +88.490%
 + METHOD        5.1234%     93.833%     +88.710%`
 
-  expect(comment).toEqual(expectedComment)
+  expect(result.comment).toEqual(expectedComment)
 })

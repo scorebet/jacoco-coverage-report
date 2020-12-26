@@ -7,6 +7,9 @@ inputs:
     required: true
   coverage_path:
     required: true
+  decrease_threshold:
+    required: false
+    default: '0.075'
 runs:
   using: 'node12'
   main: 'dist/index.js'
