@@ -10,6 +10,9 @@ inputs:
   decrease_threshold:
     required: false
     default: '0.075'
+  coveralls_url:
+    required: false
+    default: 'https://coveralls.io'
 runs:
   using: 'node12'
   main: 'dist/index.js'

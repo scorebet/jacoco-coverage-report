@@ -17,6 +17,7 @@ const columnValueWidth = 6
 export async function createCommentOnPullRequest(
   path: string,
   coveragePath: string,
+  coverallsUrl: string,
   pullRequestNumber?: number
 ): Promise<{
   comment: string
@@ -111,11 +112,11 @@ export async function createCommentOnPullRequest(
   // Coverage summary
   comment.push(header2)
   comment.push(body2)
-  // comment.push('\n')
-  // comment.push('```')
-  // comment.push('\n')
-  // comment.push('\n')
-  // comment.push('For coveralls report [click here]()')
+  comment.push('\n')
+  comment.push('```')
+  comment.push('\n')
+  comment.push('\n')
+  comment.push(`For coveralls report: ${coverallsUrl}`)
   return {
     comment: comment.join(''),
     targetCoverages,

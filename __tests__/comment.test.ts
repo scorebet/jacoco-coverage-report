@@ -4,6 +4,7 @@ test('Create comment verification with positive coverage', async () => {
   let result = await createCommentOnPullRequest(
     './fixtures/jacocoTestReport.xml',
     './fixtures/coverage-report-positive.cov',
+    'https://coveralls.io',
     2857
   )
 
@@ -25,7 +26,10 @@ test('Create comment verification with positive coverage', async () => {
 + COMPLEXITY    45.123%     77.729%     +32.605%
 + INSTRUCTION   90.123%     94.914%     +4.7914%
 + LINE          95.123%     97.614%     +2.4907%
-+ METHOD        35.123%     93.833%     +58.710%`
++ METHOD        35.123%     93.833%     +58.710%
+\`\`\`
+
+For coveralls report: https://coveralls.io`
 
   expect(result.comment).toEqual(expectedComment)
   expect(result.targetCoverages).toContainEqual({
@@ -40,6 +44,7 @@ test('Create comment verification with negative coverage', async () => {
   let result = await createCommentOnPullRequest(
     './fixtures/jacocoTestReport.xml',
     './fixtures/coverage-report-negative.cov',
+    'https://coveralls.io',
     2857
   )
 
@@ -61,7 +66,10 @@ test('Create comment verification with negative coverage', async () => {
 - COMPLEXITY    98.123%     77.729%     -20.394%
 - INSTRUCTION   98.123%     94.914%     -3.2086%
 - LINE          98.123%     97.614%     -0.5093%
-- METHOD        98.123%     93.833%     -4.2899%`
+- METHOD        98.123%     93.833%     -4.2899%
+\`\`\`
+
+For coveralls report: https://coveralls.io`
 
   expect(result.comment).toEqual(expectedComment)
   expect(result.targetCoverages).toContainEqual({
@@ -76,6 +84,7 @@ test('Create comment verification with equal coverage', async () => {
   let result = await createCommentOnPullRequest(
     './fixtures/jacocoTestReport.xml',
     './fixtures/coverage-report-equal.cov',
+    'https://coveralls.io',
     2857
   )
 
@@ -97,7 +106,10 @@ test('Create comment verification with equal coverage', async () => {
 # COMPLEXITY    77.729%     77.729%     +0.000%
 # INSTRUCTION   94.914%     94.914%     +0.000%
 # LINE          97.614%     97.614%     +0.000%
-# METHOD        93.833%     93.833%     +0.000%`
+# METHOD        93.833%     93.833%     +0.000%
+\`\`\`
+
+For coveralls report: https://coveralls.io`
 
   expect(result.comment).toEqual(expectedComment)
   expect(result.targetCoverages).toContainEqual({
@@ -112,6 +124,7 @@ test('Create comment verification with missing coverage', async () => {
   let result = await createCommentOnPullRequest(
     './fixtures/jacocoTestReport.xml',
     './fixtures/coverage-report-missing.cov',
+    'https://coveralls.io',
     2857
   )
 
@@ -133,7 +146,10 @@ test('Create comment verification with missing coverage', async () => {
 # COMPLEXITY    --          77.729%     --
 # INSTRUCTION   --          94.914%     --
 # LINE          --          97.614%     --
-# METHOD        --          93.833%     --`
+# METHOD        --          93.833%     --
+\`\`\`
+
+For coveralls report: https://coveralls.io`
 
   expect(result.comment).toEqual(expectedComment)
   expect(result.targetCoverages.length).toEqual(0)
@@ -143,6 +159,7 @@ test('Create comment verification with single-digit coverage', async () => {
   let result = await createCommentOnPullRequest(
     './fixtures/jacocoTestReport.xml',
     './fixtures/coverage-report-single-digit.cov',
+    'https://coveralls.io',
     2857
   )
 
@@ -164,7 +181,10 @@ test('Create comment verification with single-digit coverage', async () => {
 + COMPLEXITY    4.1234%     77.729%     +73.605%
 + INSTRUCTION   9.1234%     94.914%     +85.791%
 + LINE          9.1234%     97.614%     +88.490%
-+ METHOD        5.1234%     93.833%     +88.710%`
++ METHOD        5.1234%     93.833%     +88.710%
+\`\`\`
+
+For coveralls report: https://coveralls.io`
 
   expect(result.comment).toEqual(expectedComment)
 })
@@ -173,6 +193,7 @@ test('Create comment verification with null pull request', async () => {
   let result = await createCommentOnPullRequest(
     './fixtures/jacocoTestReport.xml',
     './fixtures/coverage-report-single-digit.cov',
+    'https://coveralls.io',
     undefined
   )
 
@@ -194,7 +215,10 @@ test('Create comment verification with null pull request', async () => {
 + COMPLEXITY    4.1234%     77.729%     +73.605%
 + INSTRUCTION   9.1234%     94.914%     +85.791%
 + LINE          9.1234%     97.614%     +88.490%
-+ METHOD        5.1234%     93.833%     +88.710%`
++ METHOD        5.1234%     93.833%     +88.710%
+\`\`\`
+
+For coveralls report: https://coveralls.io`
 
   expect(result.comment).toEqual(expectedComment)
 })

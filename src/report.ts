@@ -6,12 +6,14 @@ import fs from 'fs'
 export default async function create(
   path: string,
   coveragePath: string,
-  githubToken: string
+  githubToken: string,
+  coverallsUrl: string
 ): Promise<void> {
   const pullRequest = await findPullRequest(githubToken)
   const result = await createCommentOnPullRequest(
     path,
     coveragePath,
+    coverallsUrl,
     pullRequest?.number
   )
   if (pullRequest) {

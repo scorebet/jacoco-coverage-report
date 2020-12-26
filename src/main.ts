@@ -6,7 +6,8 @@ async function run(): Promise<void> {
     const token: string = core.getInput('github_token')
     const path: string = core.getInput('path')
     const coveragePath: string = core.getInput('coverage_path')
-    await create(path, coveragePath, token)
+    const coverallsUrl: string = core.getInput('coveralls_url')
+    await create(path, coveragePath, token, coverallsUrl)
   } catch (error) {
     core.setFailed(error.message)
   }

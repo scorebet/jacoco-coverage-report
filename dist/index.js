@@ -47,7 +47,7 @@ exports.IDENTIFIER = 'd3f06eff-da11-4bab-9164-8393ac271c50';
 // Grid spaces
 const columnWidth = 12;
 const columnValueWidth = 6;
-function createCommentOnPullRequest(path, coveragePath, pullRequestNumber) {
+function createCommentOnPullRequest(path, coveragePath, coverallsUrl, pullRequestNumber) {
     return __awaiter(this, void 0, void 0, function* () {
         const jacocoXmlResult = yield fs_1.promises.readFile(path, 'utf8');
         const xml = fast_xml_parser_1.default.parse(jacocoXmlResult, {
@@ -118,6 +118,11 @@ function createCommentOnPullRequest(path, coveragePath, pullRequestNumber) {
         // Coverage summary
         comment.push(header2);
         comment.push(body2);
+        comment.push('\n');
+        comment.push('```');
+        comment.push('\n');
+        comment.push('\n');
+        comment.push(`For coveralls report: ${coverallsUrl}`);
         return {
             comment: comment.join(''),
             targetCoverages,
@@ -144,7 +149,7 @@ function createCommentCoverageLine(source, target) {
         .padEnd(columnValueWidth, '0')
         .concat('%')
         .padEnd(columnWidth, ' ');
-    const diffCoverage = (source.coverage - ((_e = target === null || target === void 0 ? void 0 : target.coverage) !== null && _e !== void 0 ? _e : 0.0))
+    const diffCoverage = Math.abs(source.coverage - ((_e = target === null || target === void 0 ? void 0 : target.coverage) !== null && _e !== void 0 ? _e : 0.0))
         .toFixed(4)
         .toString()
         .substring(0, columnValueWidth)
@@ -160,7 +165,7 @@ function createCommentCoverageLine(source, target) {
         return `+ ${type}${targetCoverage}${sourceCoverage}+${diffCoverage}`;
     }
     else {
-        return `- ${type}${targetCoverage}${sourceCoverage}${diffCoverage}`;
+        return `- ${type}${targetCoverage}${sourceCoverage}-${diffCoverage}`;
     }
 }
 
@@ -212,7 +217,8 @@ function run() {
             const token = core.getInput('github_token');
             const path = core.getInput('path');
             const coveragePath = core.getInput('coverage_path');
-            yield report_1.default(path, coveragePath, token);
+            const coverallsUrl = core.getInput('coveralls_url');
+            yield report_1.default(path, coveragePath, token, coverallsUrl);
         }
         catch (error) {
             core.setFailed(error.message);
@@ -355,10 +361,10 @@ const core = __importStar(__webpack_require__(2186));
 const comment_1 = __webpack_require__(1667);
 const pull_request_1 = __webpack_require__(1843);
 const fs_1 = __importDefault(__webpack_require__(5747));
-function create(path, coveragePath, githubToken) {
+function create(path, coveragePath, githubToken, coverallsUrl) {
     return __awaiter(this, void 0, void 0, function* () {
         const pullRequest = yield pull_request_1.findPullRequest(githubToken);
-        const result = yield comment_1.createCommentOnPullRequest(path, coveragePath, pullRequest === null || pullRequest === void 0 ? void 0 : pullRequest.number);
+        const result = yield comment_1.createCommentOnPullRequest(path, coveragePath, coverallsUrl, pullRequest === null || pullRequest === void 0 ? void 0 : pullRequest.number);
         if (pullRequest) {
             yield pull_request_1.pushCommentOnPullRequest(pullRequest.number, githubToken, result.comment);
         }
