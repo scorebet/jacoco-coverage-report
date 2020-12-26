@@ -2,6 +2,7 @@ import * as core from '@actions/core'
 import * as github from '@actions/github'
 import {createCommentOnPullRequest, Coverage} from './comment'
 import {findPullRequest, pushCommentOnPullRequest} from './pull-request'
+import fs from 'fs'
 
 export default async function create(
   path: string,
@@ -24,6 +25,7 @@ export default async function create(
     core.info(`WARNING: Pull request not found, skipping PR comment....`)
   }
   createOutput(result.sourceCoverages, result.targetCoverages)
+  saveOutput(result.sourceCoverages, coveragePath)
 }
 
 export function createOutput(
@@ -66,4 +68,9 @@ export function createOutput(
     core.setOutput('report-coverage-status', 'success')
     core.info(`SUCCESS: ${summary}`)
   }
+}
+
+export function saveOutput(sourceCoverages: Coverage[], coveragePath: string) {
+  console.info(`Saving new coverage: ${JSON.stringify(sourceCoverages)}`)
+  fs.writeFileSync(coveragePath, JSON.stringify(sourceCoverages))
 }
