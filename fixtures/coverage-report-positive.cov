@@ -1,0 +1,38 @@
+[
+    {
+        "type": "INSTRUCTION",
+        "missed": 123,
+        "covered": 123123,
+        "coverage": 90.1234
+    },
+    {
+        "type": "BRANCH",
+        "missed": 123,
+        "covered": 123123,
+        "coverage": 54.1234
+    },
+    {
+        "type": "LINE",
+        "missed": 123,
+        "covered": 123123,
+        "coverage": 95.1234
+    },
+    {
+        "type": "COMPLEXITY",
+        "missed": 123,
+        "covered": 123123,
+        "coverage": 45.1234
+    },
+    {
+        "type": "METHOD",
+        "missed": 123,
+        "covered": 123123,
+        "coverage": 35.1234
+    },
+    {
+        "type": "CLASS",
+        "missed": 123,
+        "covered": 123123,
+        "coverage": 43.1234
+    }
+]

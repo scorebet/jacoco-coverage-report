@@ -5,6 +5,8 @@ inputs:
     required: true
   path:
     required: true
+  coverage_path:
+    required: true
 runs:
   using: 'node12'
   main: 'dist/index.js'
