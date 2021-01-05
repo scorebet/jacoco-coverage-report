@@ -14,7 +14,7 @@ Create a workflow `.yml` file in your repositories `.github/workflows` directory
 
 ### Inputs
 `github_token`
-* **Required** Token to use to write to the pull request. ${{secrets.GITHUB_TOKEN}} will work.
+* **Required** Token to use to write to the pull request. `${{secrets.GITHUB_TOKEN}}` will work.
 
 `path`
 * **Required** Path to the test results in xml format generated through [jacoco report](https://www.eclemma.org/jacoco/trunk/doc/report-mojo.html).
@@ -23,10 +23,10 @@ Create a workflow `.yml` file in your repositories `.github/workflows` directory
 * **Required** Path to the coverage file that contains the previous coverage results. If file is missing, it will create that file and write the coverage result.
 
 `decrease_threshold`
-* Threshold for acceptable coverage. If coverage fells below (`previous-coverage` - `decrease-coverage`), it wont fail this step but generates an output saying that it coverage failed.
+* Threshold for acceptable coverage. If coverage fells below (`previous-coverage` - `decrease-coverage`), it wont fail this step but generates an output saying that the coverage failed.
 
 `coveralls_url`
-* The url for coveralls which is displayed as part of the report within the pull request.
+* The coveralls url which is displayed as part of the report within the pull request.
 
 ### Outputs
 
@@ -80,10 +80,10 @@ jobs:
 ===================================================
 ##              dev         #2013       +/-      ##
 ===================================================
-+ BRANCH        74.889%     74.911%     +0.0223%
+- BRANCH        74.911%     74.889%     -0.0223%
 + CLASS         96.828%     96.829%     +0.0018%
 + COMPLEXITY    73.748%     73.765%     +0.0178%
-+ INSTRUCTION   93.657%     93.664%     +0.0062%
+- INSTRUCTION   93.664%     93.657%     -0.0062%
 + LINE          97.773%     97.775%     +0.0017%
 + METHOD        94.042%     94.045%     +0.0030%
 ```
