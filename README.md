@@ -2,6 +2,8 @@
   <a href="https://github.com/actions/typescript-action/actions"><img alt="typescript-action status" src="https://github.com/scorebet/jacoco-coverage-report/workflows/build-test/badge.svg"></a>
 </p>
 
+
+
 # Jacoco Coverage Report
 
 Generate Jacoco coverage report and comments it to the existing pull request if it exists.
