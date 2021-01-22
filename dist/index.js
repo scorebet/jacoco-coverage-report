@@ -268,22 +268,40 @@ exports.pushCommentOnPullRequest = exports.findPullRequest = void 0;
 const core = __importStar(__webpack_require__(2186));
 const github = __importStar(__webpack_require__(5438));
 const comment_1 = __webpack_require__(1667);
-/* eslint-disable @typescript-eslint/no-explicit-any*/
+// /* eslint-disable @typescript-eslint/no-explicit-any*/
 function findPullRequest(githubToken) {
     return __awaiter(this, void 0, void 0, function* () {
-        /* eslint-enable */
-        const octokit = github.getOctokit(githubToken);
-        const { sha: commitSha, repo: { repo: repoName, owner: repoOwner } } = github.context;
-        const defaultParameter = {
-            repo: repoName,
-            owner: repoOwner
-        };
-        const { data: pullRequests } = yield octokit.repos.listPullRequestsAssociatedWithCommit(Object.assign(Object.assign({}, defaultParameter), { commit_sha: commitSha }));
-        if (pullRequests.length === 0) {
-            core.info(`WARNING: Unable to find pull request for commit sha: ${commitSha}`);
+        const { payload: { pull_request: pullRequest } } = github.context;
+        if (pullRequest == null) {
+            core.info(`WARNING: Unable to find pull request`);
             return null;
         }
-        return pullRequests[0];
+        else {
+            return pullRequest;
+        }
+        // /* eslint-enable */
+        // const octokit = github.getOctokit(githubToken)
+        // const {
+        //   sha: commitSha,
+        //   repo: {repo: repoName, owner: repoOwner}
+        // } = github.context
+        // const defaultParameter = {
+        //   repo: repoName,
+        //   owner: repoOwner
+        // }
+        // const {
+        //   data: pullRequests
+        // } = await octokit.repos.listPullRequestsAssociatedWithCommit({
+        //   ...defaultParameter,
+        //   commit_sha: commitSha
+        // })
+        // if (pullRequests.length === 0) {
+        //   core.info(
+        //     `WARNING: Unable to find pull request for commit sha: ${commitSha}`
+        //   )
+        //   return null
+        // }
+        // return pullRequests[0]
     });
 }
 exports.findPullRequest = findPullRequest;

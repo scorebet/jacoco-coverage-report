@@ -2,34 +2,44 @@ import * as core from '@actions/core'
 import * as github from '@actions/github'
 import {IDENTIFIER} from './comment'
 
-/* eslint-disable @typescript-eslint/no-explicit-any*/
+// /* eslint-disable @typescript-eslint/no-explicit-any*/
 export async function findPullRequest(githubToken: string): Promise<any> {
-  /* eslint-enable */
-  const octokit = github.getOctokit(githubToken)
-
   const {
-    sha: commitSha,
-    repo: {repo: repoName, owner: repoOwner}
+    payload: {pull_request: pullRequest}
   } = github.context
 
-  const defaultParameter = {
-    repo: repoName,
-    owner: repoOwner
-  }
-
-  const {
-    data: pullRequests
-  } = await octokit.repos.listPullRequestsAssociatedWithCommit({
-    ...defaultParameter,
-    commit_sha: commitSha
-  })
-  if (pullRequests.length === 0) {
-    core.info(
-      `WARNING: Unable to find pull request for commit sha: ${commitSha}`
-    )
+  if (pullRequest == null) {
+    core.info(`WARNING: Unable to find pull request`)
     return null
+  } else {
+    return pullRequest
   }
-  return pullRequests[0]
+  // /* eslint-enable */
+  // const octokit = github.getOctokit(githubToken)
+
+  // const {
+  //   sha: commitSha,
+  //   repo: {repo: repoName, owner: repoOwner}
+  // } = github.context
+
+  // const defaultParameter = {
+  //   repo: repoName,
+  //   owner: repoOwner
+  // }
+
+  // const {
+  //   data: pullRequests
+  // } = await octokit.repos.listPullRequestsAssociatedWithCommit({
+  //   ...defaultParameter,
+  //   commit_sha: commitSha
+  // })
+  // if (pullRequests.length === 0) {
+  //   core.info(
+  //     `WARNING: Unable to find pull request for commit sha: ${commitSha}`
+  //   )
+  //   return null
+  // }
+  // return pullRequests[0]
 }
 
 export async function pushCommentOnPullRequest(
