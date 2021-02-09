@@ -63,7 +63,7 @@ function createCommentOnPullRequest(path, coveragePath, coverallsUrl, pullReques
                 type: node['@_type'],
                 missed,
                 covered,
-                coverage: Math.round((covered / (covered + missed)) * 1000000) / 10000
+                coverage: Math.round((1 - missed / (covered + missed)) * 1000000) / 10000
             };
         })
             .sort(function (a, b) {
